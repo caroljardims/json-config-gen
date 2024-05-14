@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <title>Editor de Configurações JSON</title>
+</head>
+<body>
+    <h1>Editor de Configurações JSON</h1>
+    <div class="container">
+        <div class="input-area">
+            <textarea id="jsonInput" placeholder="Cole o JSON aqui..."></textarea>
+            <div>
+                <button onclick="loadJson()">Carregar JSON</button>
+            </div>
+            <div id="configEditor"></div>
+            
+            <div>
+                <label><input type="checkbox" value="QA" checked> QA</label>
+                <label><input type="checkbox" value="MA" checked> MA</label>
+                <label><input type="checkbox" value="SA" checked> SA</label>
+                <label><input type="checkbox" value="SE" checked> SE</label>
+            </div>
+        </div>
+        <div class="output-area">
+            <textarea id="jsonOutput" readonly></textarea>
+            <button onclick="generateOutput()">Gerar JSON Modificado</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

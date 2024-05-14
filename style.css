@@ -1,0 +1,82 @@
+body {
+    font-family: 'Roboto', sans-serif; /* Aplica a fonte Roboto */
+    background-color: #f4f4f4;
+    margin: 20px;
+    padding: 20px;
+    box-shadow: 0 0 10px 0 rgba(0,0,0,0.1);
+    color: #333; /* Cor de texto mais suave */
+}
+
+h1 {
+    color: #2C3E50; /* Cor de título mais destacada */
+    margin-bottom: 20px;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.input-area, .output-area {
+    flex: 1;  /* Faz com que cada área ocupe metade do espaço disponível */
+    margin: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+textarea {
+    width: 100%;
+    height: 200px;
+    margin-bottom: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+.list-container {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #e7f0fd;  /* Azul claro para listas */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+.list-item {
+    padding: 5px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;  /* Fundo mais claro para itens individuais da lista */
+    border-radius: 4px;
+}
+
+.list-item input[type="text"], .list-item button {
+    width: auto;
+    margin-right: 5px;
+    display: inline-block;  /* Para alinhar inputs e botões na mesma linha */
+}
+
+.list-item button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+}
+
+.list-item button:hover {
+    background-color: #0056b3;
+}
