@@ -1,96 +1,123 @@
-var currentConfig = {}; // Variável global para manter o estado do JSON.
-
+// Função para carregar JSON do input e renderizar o editor de configurações
 function loadJson() {
-    const input = document.getElementById('jsonInput').value;
-    currentConfig = JSON.parse(input);
+    const jsonInput = document.getElementById('jsonInput').value;
+    window.originalJson = JSON.parse(jsonInput); // Guarda o JSON original para comparação
+    window.modifiedJson = JSON.parse(jsonInput); // Cria uma cópia do JSON para modificações
+    renderEditor(window.modifiedJson);
+}
+
+// Função para renderizar o editor de configurações
+function renderEditor(data, path = '') {
     const editor = document.getElementById('configEditor');
-    editor.innerHTML = '';
-    Object.keys(currentConfig).forEach(key => {
-        handleProperty(key, currentConfig[key], editor, currentConfig);
-    });
+    editor.innerHTML = ''; // Limpa o editor anterior
+    buildEditorUI(data, editor, path);
 }
 
-function handleProperty(key, value, parentElement, parentObject) {
-    const container = document.createElement('div');
-    container.className = 'config-item';
-    const label = document.createElement('label');
-    label.textContent = key + ": ";
-    container.appendChild(label);
+// Função auxiliar para construir a UI de edição baseada no objeto JSON
+function buildEditorUI(obj, parentElement, path, level = 0) {
+    for (const key in obj) {
+        const inputPath = path ? `${path}.${key}` : key;
+        const container = document.createElement('div');
+        container.className = `level-${level}`; // Adiciona classe baseada no nível
+        container.style.marginLeft = `${20 * level}px`; // Indenta baseado no nível
 
-    if (Array.isArray(value)) {
-        const listContainer = document.createElement('div');
-        listContainer.className = 'list-container';
-        value.forEach((item, index) => {
-            const itemContainer = document.createElement('div');
-            itemContainer.className = 'list-item';
-            handleObjectOrValue(item, itemContainer, value, index);
-            listContainer.appendChild(itemContainer);
-        });
-        container.appendChild(listContainer);
-        const addButton = document.createElement('button');
-        addButton.textContent = 'Add Item';
-        addButton.onclick = () => {
-            const newItem = createNewItemBasedOnLast(value);
-            value.push(newItem);
-            const newItemContainer = document.createElement('div');
-            newItemContainer.className = 'list-item';
-            handleObjectOrValue(newItem, newItemContainer, value, value.length - 1);
-            listContainer.appendChild(newItemContainer);
-        };
-        container.appendChild(addButton);
-    } else if (typeof value === 'object' && value !== null) {
-        Object.keys(value).forEach(subKey => {
-            handleProperty(subKey, value[subKey], container, value);
-        });
-    } else {
-        const input = document.createElement('input');
-        input.type = typeof value === 'boolean' ? 'checkbox' : 'text';
-        input.checked = value;
-        input.value = value;
-        input.onchange = () => {
-            if (input.type === 'checkbox') {
-                parentObject[key] = input.checked;
-            } else {
-                parentObject[key] = input.value;
-            }
-        };
-        container.appendChild(input);
-    }
-    parentElement.appendChild(container);
-}
-
-function generateOutput() {
-    const output = document.getElementById('jsonOutput');
-    output.value = JSON.stringify(currentConfig, null, 2);
-}
-
-function handleObjectOrValue(item, parentContainer, array, index) {
-    if (typeof item === 'object' && item !== null) {
-        Object.keys(item).forEach(subKey => {
-            handleProperty(subKey, item[subKey], parentContainer, item);
-        });
-    } else {
-        const itemInput = document.createElement('input');
-        itemInput.type = 'text';
-        itemInput.value = item;
-        itemInput.onchange = () => array[index] = itemInput.value;
-        parentContainer.appendChild(itemInput);
-    }
-    const removeButton = document.createElement('button');
-    removeButton.textContent = 'Remove';
-    removeButton.onclick = () => {
-        array.splice(index, 1);
-        parentContainer.parentNode.removeChild(parentContainer);
-    };
-    parentContainer.appendChild(removeButton);
-}
-
-function createNewItemBasedOnLast(array) {
-    if (array.length > 0) {
-        const lastItem = array[array.length - 1];
-        if (typeof lastItem === 'object' && lastItem !== null) {
-            return JSON.parse(JSON.stringify(lastItem)); // Clona o último objeto
+        if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+            container.innerHTML = `<strong>${key}</strong> <button onclick="removeProperty('${inputPath}')">Remove</button> <button onclick="addProperty('${inputPath}')">Add Property</button><br/>`;
+            parentElement.appendChild(container);
+            buildEditorUI(obj[key], container, inputPath, level + 1);
+        } else {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = JSON.stringify(obj[key]);
+            input.onchange = (e) => updateJson(inputPath, e.target.value);
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.onclick = () => removeProperty(inputPath);
+            container.appendChild(document.createTextNode(key + ': '));
+            container.appendChild(input);
+            container.appendChild(removeButton);
+            container.appendChild(document.createElement('br'));
+            parentElement.appendChild(container);
         }
     }
-    return {}; // Retorna um objeto vazio se a lista estiver vazia ou não tiver objetos
+    const addButton = document.createElement('button');
+    addButton.textContent = 'Add Property';
+    addButton.onclick = () => addProperty(path);
+    parentElement.appendChild(addButton);
 }
+
+
+// Função para atualizar o JSON com base nos inputs do usuário
+function updateJson(path, value) {
+    const paths = path.split('.');
+    let current = window.modifiedJson;
+    for (let i = 0; i < paths.length - 1; i++) {
+        current = current[paths[i]];
+    }
+    current[paths[paths.length - 1]] = JSON.parse(value);
+}
+
+// Função para adicionar uma nova propriedade ao JSON
+// Função para adicionar uma nova propriedade ao JSON
+function addProperty(path) {
+    const keyName = prompt('Enter the key name for the new property:');
+    if (!keyName) return;
+
+    const value = prompt('Enter the value for the new property (JSON format):');
+    try {
+        // Tenta analisar a entrada como JSON. Se falhar, tenta converter strings comuns para formato JSON válido
+        let parsedValue;
+        try {
+            parsedValue = JSON.parse(value);
+        } catch (e) {
+            // Se o erro ocorrer porque o valor é uma string simples sem aspas duplas, tenta corrigir adicionando as aspas
+            if (/^[\w\s]+$/.test(value.trim())) {
+                parsedValue = value.trim();
+            } else {
+                throw new Error('Please ensure the value is in valid JSON format, including double quotes around strings.');
+            }
+        }
+
+        // Adiciona a propriedade ao objeto JSON
+        if (path) {
+            let current = window.modifiedJson;
+            const paths = path.split('.');
+            paths.forEach(p => current = current[p]);
+            current[keyName] = parsedValue;
+        } else {
+            window.modifiedJson[keyName] = parsedValue;
+        }
+        renderEditor(window.modifiedJson);
+    } catch (e) {
+        alert('Invalid JSON value. ' + e.message);
+    }
+}
+
+
+// Função para remover uma propriedade do JSON
+function removeProperty(path) {
+    const paths = path.split('.');
+    let current = window.modifiedJson;
+    for (let i = 0; i < paths.length - 1; i++) {
+        current = current[paths[i]];
+    }
+    delete current[paths[paths.length - 1]];
+    renderEditor(window.modifiedJson);
+}
+
+// Função para gerar o JSON de saída com base nas seleções dos checkboxes
+// Função para gerar o JSON de saída com base nas seleções dos checkboxes
+function generateOutput() {
+    const environments = ['QACheckbox', 'MACheckbox', 'SACheckbox', 'SECheckbox'];
+    const output = {};
+    const rootKey = Object.keys(window.originalJson)[0]; // Assume 'uat' is the root key; dynamic for any single root.
+
+    environments.forEach((env) => {
+        const envKey = env.replace('Checkbox', ''); // Transforma 'QACheckbox' em 'QA'
+        const jsonData = document.getElementById(env).checked ? JSON.parse(JSON.stringify(window.modifiedJson[rootKey])) : JSON.parse(JSON.stringify(window.originalJson[rootKey]));
+        output[envKey] = jsonData;
+    });
+
+    document.getElementById('jsonOutput').value = JSON.stringify(output, null, 2);
+}
+
